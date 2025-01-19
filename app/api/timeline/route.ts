@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   try {
     const cachedTimeline = await getCachedTimeline(slug);
     if (cachedTimeline) {
-      console.log("Returning cached timeline for:", slug);
+      console.log("Returning cached timeline for", slug);
       return NextResponse.json(cachedTimeline.timeline);
     }
 
