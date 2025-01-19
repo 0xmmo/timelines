@@ -152,7 +152,7 @@ export function Timeline({ data }: { data?: Period[] }) {
                     <p className="text-lg font-semibold">{event.name}</p>
                     <p className="text-gray-600 pr-8">{event.description}</p>
                     {event.image && (
-                      <div className="mt-4 max-w-80 pr-2">
+                      <div className="mt-4 max-w-sm pr-2">
                         <img
                           src={event.image.url}
                           alt={event.image.title}
