@@ -202,6 +202,15 @@ export default function Home() {
         >
           0xmmo.co
         </a>
+        <span className="mx-2">•</span>
+        <a
+          href="https://github.com/0xmmo/timelines"
+          className="hover:text-gray-700 underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          github
+        </a>
       </footer>
     </div>
   );
