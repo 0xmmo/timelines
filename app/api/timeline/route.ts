@@ -103,8 +103,7 @@ export async function GET(request: Request) {
         })
     );
 
-    console.log("Fetched Wikipedia content and images");
-    console.log(imageUrls);
+    console.log("Fetched Wikipedia content and images", imageUrls.length);
 
     if (!content) {
       return NextResponse.json({
@@ -139,7 +138,7 @@ export async function GET(request: Request) {
 
     const result = await generateText({
       // model: openai("gpt-4o"),
-      model: google("gemini-2.0-flash-exp"),
+      model: google("gemini-2.0-flash-exp"), // gemini-2.0-flash-thinking-exp-01-21
       prompt: prompt,
       tools: {
         createTimeline: {
@@ -152,7 +151,7 @@ export async function GET(request: Request) {
     });
 
     const timeline = result?.toolCalls?.[0]?.args;
-    console.log(JSON.stringify(timeline).slice(0, 2500));
+    console.log(JSON.stringify(timeline).slice(0, 500));
 
     if (!timeline) throw Error("Bad timeline call");
 

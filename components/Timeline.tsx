@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import resolveConfig from "tailwindcss/resolveConfig";
 import tailwindConfig from "@/tailwind.config";
 import { parse, format, isValid } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Event {
   date: string;
@@ -13,6 +14,7 @@ interface Event {
     url: string;
     title: string;
   };
+  expandedInfo?: string;
 }
 
 interface Period {
@@ -36,7 +38,11 @@ const colorPalette = [
   "fuchsia-600",
 ];
 
-export function Timeline({ data }: { data?: Period[] }) {
+export function Timeline({ data, slug }: { data?: Period[]; slug: string }) {
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+  const [expandedContent, setExpandedContent] = useState<string | null>(null);
+  const [loadingEventId, setLoadingEventId] = useState<string | null>(null);
+
   const periodColors = useMemo(() => {
     return (
       data?.map((_, index) => colorPalette[index % colorPalette.length]) || []
@@ -85,6 +91,33 @@ export function Timeline({ data }: { data?: Period[] }) {
     return acc;
   }, {} as Record<string, React.CSSProperties>);
 
+  const handleEventClick = async (periodName: string, eventName: string) => {
+    const eventId = `${periodName}-${eventName}`;
+
+    if (expandedEventId === eventId) {
+      setExpandedEventId(null);
+      setExpandedContent(null);
+      return;
+    }
+
+    setLoadingEventId(eventId);
+    try {
+      const response = await fetch(
+        `/api/extra?slug=${slug}&periodName=${encodeURIComponent(
+          periodName
+        )}&eventName=${encodeURIComponent(eventName)}`
+      );
+      const data = await response.json();
+
+      setExpandedEventId(eventId);
+      setExpandedContent(data.expandedInfo);
+    } catch (error) {
+      console.error("Failed to fetch expanded information:", error);
+    } finally {
+      setLoadingEventId(null);
+    }
+  };
+
   return (
     <div className="container mx-auto pt-10 -mb-4">
       <style jsx>{`
@@ -101,7 +134,18 @@ export function Timeline({ data }: { data?: Period[] }) {
           .join("")}
       `}</style>
       {data.map((period, periodIndex) => (
-        <div key={periodIndex} className="relative pb-12">
+        <motion.div
+          key={periodIndex}
+          className="relative pb-12"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.5,
+            delay: periodIndex * 0.2,
+            type: "spring",
+            bounce: 0.3,
+          }}
+        >
           <div
             className={`absolute left-1/4 -ml-0.5 top-0 bottom-0 w-1 bg-${
               periodColors[periodIndex % colorPalette.length]
@@ -133,9 +177,19 @@ export function Timeline({ data }: { data?: Period[] }) {
           </div>
           <div>
             {period.events.map((event, eventIndex) => (
-              <div
+              <motion.div
                 key={eventIndex}
-                className="grid grid-cols-4 gap-4 hover:bg-gray-100 py-4 rounded-lg transition-colors duration-300"
+                className="grid grid-cols-4 gap-4 hover:bg-gray-100 py-4 rounded-lg transition-colors duration-300 cursor-pointer"
+                onClick={() => handleEventClick(period.name, event.name)}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 0.5,
+                  delay:
+                    (periodIndex * period.events.length + eventIndex) * 0.2,
+                  type: "spring",
+                  bounce: 0.3,
+                }}
               >
                 <div className="col-span-1 text-right pr-4 pl-2">
                   <p className="text-gray-600 font-semibold md:text-md text-sm">
@@ -149,8 +203,41 @@ export function Timeline({ data }: { data?: Period[] }) {
                     } border-4 border-white z-10`}
                   ></div>
                   <div className="ml-8">
-                    <p className="text-lg font-semibold">{event.name}</p>
-                    <p className="text-gray-600 pr-8">{event.description}</p>
+                    <p
+                      className={`text-lg font-semibold ${
+                        loadingEventId === `${period.name}-${event.name}`
+                          ? "animate-pulse"
+                          : ""
+                      }`}
+                    >
+                      {event.name}
+                    </p>
+                    <AnimatePresence mode="wait">
+                      <motion.p
+                        key={
+                          expandedEventId === `${period.name}-${event.name}`
+                            ? "expanded"
+                            : "collapsed"
+                        }
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{
+                          duration: 0.3,
+                          type: "spring",
+                          bounce: 0.2,
+                        }}
+                        className={`text-gray-600 pr-8 ${
+                          loadingEventId === `${period.name}-${event.name}`
+                            ? "animate-pulse"
+                            : ""
+                        }`}
+                      >
+                        {expandedEventId === `${period.name}-${event.name}`
+                          ? expandedContent
+                          : event.description}
+                      </motion.p>
+                    </AnimatePresence>
                     {event.image && (
                       <div className="mt-4 max-w-sm pr-2">
                         <img
@@ -165,10 +252,10 @@ export function Timeline({ data }: { data?: Period[] }) {
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       ))}
     </div>
   );

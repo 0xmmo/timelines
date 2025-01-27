@@ -8,6 +8,7 @@ import { Home } from "lucide-react";
 
 interface TimelineData {
   title: string;
+  slug: string;
   periods: Array<{
     years: string;
     name: string;
@@ -67,7 +68,7 @@ function TimelineContent() {
       setIsLoading(true);
       getTimelineData(slug)
         .then((data) => {
-          setTimelineData(data);
+          setTimelineData({ ...data, slug });
           setIsLoading(false);
         })
         .catch((err) => {
@@ -99,18 +100,18 @@ function TimelineContent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mt-8 mb-3 text-center font-corben">
+      <h1 className="text-4xl font-bold mt-8 mb-3 text-center font-corben tracking-tight">
         {timelineData.title}
       </h1>
       <Link
-        href={`https://en.wikipedia.org/wiki/${slug}`}
+        href={`https://en.wikipedia.org/wiki/${timelineData.slug}`}
         className="text-blue-500 hover:underline mb-6 block text-center"
         target="_blank"
         rel="noopener noreferrer"
       >
         Wikipedia
       </Link>
-      <Timeline data={timelineData.periods} />
+      <Timeline data={timelineData.periods} slug={timelineData.slug} />
     </div>
   );
 }
