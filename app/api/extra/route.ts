@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     Given the following Wikipedia article content, provide detailed information about the event "${eventName}" from the period "${periodName}".
     Focus on providing a summary of key details and important information.
     Keep the response to less than 1 paragraph.
-    Do not say the name of the event or period.
+    Do not start your response with the name of the event or period.
 
     Wikipedia article content:
     ${content}
